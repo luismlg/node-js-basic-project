@@ -1,10 +1,8 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { FastifyInstance } from 'fastify';
+import user from './user';
 
-const yourRoute = (server: FastifyInstance, options: FastifyPluginOptions, done: Function) => {
-  server.get('/', async (request, reply) => {
-    return { hello: 'world' };
-    });
-  done();
-};
+async function routes(fastify: FastifyInstance) {
+    fastify.register(user, { prefix: '/user' });
+}
 
-export default yourRoute;
+export default routes;
