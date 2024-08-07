@@ -1,29 +1,26 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import prisma from "../config/prisma";
-import { z } from "zod";
-import bcrypt from 'bcrypt'
-import { hasJSDocParameterTags } from "typescript";
+import Joi from "joi";
+import bcrypt from "bcrypt";
+import { UserService } from "../services/UserService";
 
 export class UserController {
   static createUser = async (request: FastifyRequest, reply: FastifyReply) => {
     // Validación de entrada
-    const userSchema = z.object({
-      email: z.string().email(),
-      name: z.string().optional(),
-      password: z.string()
+    const userSchema = Joi.object({
+      email: Joi.string().email({
+        minDomainSegments: 2,
+        tlds: { allow: ["com", "net", "es"] },
+      }),
+      name: Joi.string().optional(),
+      password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{3,30}$")),
     }).required();
 
     try {
-      const userData = userSchema.parse(request.body);
-      const password = bcrypt.hashSync(userData.password, 8);
-      const user = await prisma.user.create({
-        data: {
-            email: userData.email,
-            name: userData.name,
-            password: password
-        },
-      });
-      reply.send(user);
+      const userData = userSchema.validate(request.body);
+      userData.value.password = bcrypt.hashSync(userData.value.password, 8);
+      const user = UserService.createUser(userData.value);
+      reply.status(200).send(user);
     } catch (error) {
       reply.status(400).send(error);
     }
@@ -32,9 +29,7 @@ export class UserController {
   static getUser = async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: parseInt(id) },
-      });
+      const user = UserService.getUser(parseInt(id));
       if (!user) {
         return reply.status(404).send({ error: "User not found" });
       }
@@ -45,17 +40,18 @@ export class UserController {
   };
 
   static updateUser = async (request: FastifyRequest, reply: FastifyReply) => {
-    const userSchema = z.object({
-      email: z.string().email(),
-      name: z.string().optional(),
-    });
+    const userSchema = Joi.object({
+      email: Joi.string().email({
+        minDomainSegments: 2,
+        tlds: { allow: ["com", "net", "es"] },
+      }),
+      name: Joi.string().optional(),
+      password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{3,30}$")),
+    }).required();
     const { id } = request.params as { id: string };
     try {
-      const userData = userSchema.parse(request.body);
-      const user = await prisma.user.update({
-        where: { id: parseInt(id) },
-        data: userData,
-      });
+      const userData = userSchema.validate(request.body);
+      const user = UserService.updateUser(parseInt(id), userData.value);
       reply.send(user);
     } catch (error) {
       reply.status(400).send(error);
@@ -65,14 +61,10 @@ export class UserController {
   static deleteUser = async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.params as { id: string };
     try {
-      await prisma.user.delete({
-        where: { id: parseInt(id) },
-      });
+      UserService.deleteUser(parseInt(id));
       reply.send({ message: "User deleted" });
     } catch (error) {
-      reply.status(400).send(error);  
+      reply.status(400).send(error);
     }
   };
-
-
 }
