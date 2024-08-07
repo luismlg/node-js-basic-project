@@ -1,6 +1,8 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import prisma from "../config/prisma";
 import { z } from "zod";
+import bcrypt from 'bcrypt'
+import { hasJSDocParameterTags } from "typescript";
 
 export class UserController {
   static createUser = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -8,14 +10,17 @@ export class UserController {
     const userSchema = z.object({
       email: z.string().email(),
       name: z.string().optional(),
+      password: z.string()
     }).required();
 
     try {
       const userData = userSchema.parse(request.body);
+      const password = bcrypt.hashSync(userData.password, 8);
       const user = await prisma.user.create({
         data: {
             email: userData.email,
             name: userData.name,
+            password: password
         },
       });
       reply.send(user);
@@ -65,7 +70,9 @@ export class UserController {
       });
       reply.send({ message: "User deleted" });
     } catch (error) {
-      reply.status(400).send(error);
+      reply.status(400).send(error);  
     }
   };
+
+
 }
