@@ -102,16 +102,8 @@ npm run test
 
    * [http://localhost:8000/docs](http://localhost:8000/docs)
 
-## 🗃️ Pendiente / Próximos pasos
-
-* Endpoint de recuperación de contraseña
-* Test completo de WebSocket
-* Upload a cloud (S3 o Cloudinary)
-* Autorización por rol
-* Dockerfile y docker-compose
-
 ## ✨ Autor
 
 Luis Antonio Cañas Arrones
-🔳 [GitHub](https://github.com/tu-usuario)
-📧 [Email](mailto:tu-email@dominio.com)
+🔳 [GitHub](github.com/luismlg)
+📧 [LinkedIn](https://www.linkedin.com/in/luis-antonio-ca%C3%B1as-arrones-2b677255/)
