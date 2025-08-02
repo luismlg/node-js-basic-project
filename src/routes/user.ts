@@ -1,18 +1,40 @@
-import { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { Validations } from '../middlewares/Validations';
-import { UserController } from "../controllers/UserController";
-const fastify = require('fastify')({ logger: true });
+import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { UserController } from '../controllers/UserController';
+import {
+  createUserSchema,
+  getUserSchema,
+  updateUserSchema,
+  uploadAvatarSchema,
+  deleteUserSchema,
+} from '../schemas/user.schema';
 
-const user = (
+const user = async (
   server: FastifyInstance,
-  options: FastifyPluginOptions,
-  done: Function
+  options: FastifyPluginOptions
 ) => {
-  server.post("/users", { preHandler: [Validations.validateRegisterData, fastify.CheckJWT] }, UserController.createUser);
-  server.get("/users/:id", UserController.getUser);
-  server.put("/users/:id", UserController.updateUser);
-  server.delete("/users/:id", UserController.deleteUser);
-  done();
+  server.post('/', {
+    schema: createUserSchema,
+  }, UserController.createUser);
+
+  server.get('/:id', {
+    preHandler: [server.checkJwt],
+    schema: getUserSchema,
+  }, UserController.getUser);
+
+  server.post('/avatar', {
+    preHandler: [server.checkJwt],
+    schema: uploadAvatarSchema,
+  }, UserController.uploadAvatar);
+
+  server.put('/', {
+    preHandler: [server.checkJwt],
+    schema: updateUserSchema,
+  }, UserController.updateUser);
+
+  server.delete('/:id', {
+    preHandler: [server.checkJwt],
+    schema: deleteUserSchema,
+  }, UserController.deleteUser);
 };
 
 export default user;
